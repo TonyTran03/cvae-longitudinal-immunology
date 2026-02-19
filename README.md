@@ -39,6 +39,7 @@ D_{KL}(Q || P) = \int_{z}Q(z) \log\left( \frac{Q(z)}{P(z)} \right) dz
 $$
 - Always positive
 When we try and solve, we get it to the form:
+
 $$
 D_{KL}(Q || P)  = \log p_{\theta}(x) - \mathbb{E}_{q_{\phi}}[\log p_{\theta}(z,x)-\log q_{\phi}]
 $$
