@@ -1,72 +1,69 @@
-# Marginal likelihood
+# Conditional Variational Autoencoder for Synthetic Longitudinal Immune Data
 
-_We are going to do everything to get $p_{\theta}(x)$_
+This repository implements a Conditional Variational Autoencoder (CVAE) for generating synthetic longitudinal immune-response data. The work extends the modeling framework introduced in *"Modelling of longitudinal immune profiles reveals distinct immunogenic signatures following five COVID-19 vaccinations among people living with HIV"*.
 
-$$
-p_{\theta}(x) = \int_{z}p_{\theta}(z,x)dz
-$$
+The original study demonstrated that high-dimensional immune measurements contain stable immunogenic signatures capable of distinguishing between HIV-positive and HIV-negative cohorts using machine learning classifiers. In addition to evaluating predictive structure, the study explored synthetic data generation through classical statistical and resampling-based approaches.
 
-But remember, this is intractable.
+This project investigates a model-based generative alternative. Rather than reproducing marginal feature behavior alone, the CVAE aims to learn a structured latent representation of immune trajectories while explicitly conditioning on clinically relevant variables such as HIV status, vaccine dose, and visit timing.
 
-So everything above, we are cooked.
+The central objective is to generate synthetic participant trajectories that preserve:
+
+- Marginal feature distributions  
+- Cross-feature dependence structure  
+- Longitudinal relationships across study visits  
+- Class-conditional immunological signatures  
+
+By introducing conditional latent variables, the model provides a mechanism for disentangling cohort-level effects from participant-level variability, enabling controlled sampling of virtual immune-response profiles.
 
 ---
 
-# Bayesian Route
+# Probabilistic Framework
 
-Bayes' Rule
+## Conditional Generative Model
 
-$$
-P_{\theta}(z \mid x) = \frac{P_{\theta}(z)\cdot P_{\theta}(x\mid z)}{P_{\theta}(x)}
-$$
-
-But don't forget that $P_{\theta}(x)$ is intractable, thus the Posterior is also intractable. However, we actually have a method to solve for the posterior instead. Let's rearrange so that:
+The Conditional Variational Autoencoder (CVAE) models the conditional data distribution
 
 $$
-\underbrace{p_{\theta}(x)}_{\text{model evidence}} =  \frac{p_{\theta}(x,z)} {\underbrace {[p_{\theta}(z \mid x)]}_{\text{posterior}}}
+p_{\theta}(x \mid c)
 $$
 
-## Variational inference (VI)
+where:
 
-$$
-p_{\theta}(z \mid x) \approx q_{\phi}(z\mid x)
-$$
-
-- The parameters are shared across observations (amortized Variational Inference)
+- \( x \) denotes observed immune-response measurements  
+- \( c \) denotes conditioning variables (e.g., HIV status, vaccine dose, visit index)
 
 # Objective function
-
 #### Kullback-Leibler (KL) Divergence
-
 $$
 D_{KL}(Q || P) = \int_{z}Q(z) \log\left( \frac{Q(z)}{P(z)} \right) dz
 $$
-
 - Always positive
-  When we try and solve, we get it to the form:
-  $$
-  D_{KL}(Q || P)  = \log p_{\theta}(x) - \mathbb{E}_{q_{\phi}}[\log p_{\theta}(z,x)-\log q_{\phi}]
-  $$
+When we try and solve, we get it to the form:
+
+$$
+D_{KL}(Q || P)  = \log p_{\theta}(x) - \mathbb{E}_{q_{\phi}}[\log p_{\theta}(z,x)-\log q_{\phi}]
+$$
 - $P = p_{\theta}(z \mid x)$ (no typo) (true posterior given by Bayes)
 - $Q = q_{\phi}(z \mid x)$ (encoder distribution)
-  As shuffling gives us:
-  $$
-  \begin{align}
-  \log p_{\theta}(x)  &= \underbrace{D_{KL}(Q || P)}_{ gap }  + \mathbb{E}_{q_{\phi}}[\log p_{\theta}(z,x)-\log q_{\phi}] \\
-  \implies \log p_{\theta}(x)& \geq \underbrace {\mathbb{E}_{q_{\phi}}[\log p_{\theta}(z,x)-\log q_{\phi}]}_{\text{Evidence lower fbound (ELBO)}}
-  \end{align}
-  $$
-  since
-  $$
-  D_{KL}(q_{\phi}(z \mid x) || p_{\theta}(z \mid x)) \geq 0
-  $$
+As shuffling gives us:
+
+$$
+\begin{align}
+\log p_{\theta}(x)  &= \underbrace{D_{KL}(Q || P)}_{ gap }  + \mathbb{E}_{q_{\phi}}[\log p_{\theta}(z,x)-\log q_{\phi}] \\
+\implies \log p_{\theta}(x)& \geq \underbrace {\mathbb{E}_{q_{\phi}}[\log p_{\theta}(z,x)-\log q_{\phi}]}_{\text{Evidence lower fbound (ELBO)}}
+\end{align}
+$$
+since
+$$
+D_{KL}(q_{\phi}(z \mid x) || p_{\theta}(z \mid x)) \geq 0
+$$
 - gap: How wrong is our approximate posterior vs the true posterior?
 - We pretty much ignore this because **we can't compute this**
 - Comparing:
-  - Approx posterior vs
-  - True posterior
+	- Approx posterior vs
+	- True posterior
 
-_For completion, we could've also used Jensen's Inequality_: $f(E[X]) \geq E[f(x)]$ (concave)
+*For completion, we could've also used Jensen's Inequality*: $f(E[X]) \geq E[f(x)]$ (concave)
 
 Therefore the objective to minimize is:
 
