@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+from typing import Tuple
+from pathlib import Path
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.utils.data import DataLoader, TensorDataset
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+import pyreadr
+
+
+def load_rdata_xy(rdata_path: Path, x_key: str = "x", y_key: str = "y") -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Loads X, y from an .RData file.
+
+    Expected:
+      - x: (N, D)
+      - y: (N,) or (N,1) with binary {0,1}
+    """
+    obj = pyreadr.read_r(str(rdata_path))
+
+    if x_key not in obj or y_key not in obj:
+        raise KeyError(f"Missing keys. Found: {list(obj.keys())}. Expected '{x_key}' and '{y_key}'.")
+
+    X = np.asarray(obj[x_key]).astype(np.float32)
+    y = np.asarray(obj[y_key]).reshape(-1).astype(np.int64)
+
+    uniq = np.unique(y)
+    if not set(uniq).issubset({0, 1}):
+        raise ValueError(f"y must be binary {{0,1}}. Found unique values: {uniq}")
+
+    return X, y
+
+
+def make_loaders(
+    X: np.ndarray,
+    y: np.ndarray,
+    test_size: float,
+    batch_size: int,
+    seed: int,
+    num_classes: int = 2,
+) -> Tuple[DataLoader, DataLoader, StandardScaler]:
+    """
+    Splits, standardizes X, and returns DataLoaders yielding (x, c_onehot).
+    """
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=test_size, random_state=seed, stratify=y
+    )
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train).astype(np.float32)
+    X_val = scaler.transform(X_val).astype(np.float32)
+
+    X_train_t = torch.tensor(X_train)
+    X_val_t = torch.tensor(X_val)
+
+    y_train_t = torch.tensor(y_train)
+    y_val_t = torch.tensor(y_val)
+
+    c_train = F.one_hot(y_train_t, num_classes=num_classes).float()
+    c_val = F.one_hot(y_val_t, num_classes=num_classes).float()
+
+    train_loader = DataLoader(
+        TensorDataset(X_train_t, c_train),
+        batch_size=batch_size,
+        shuffle=True,
+        drop_last=False,
+    )
+    val_loader = DataLoader(
+        TensorDataset(X_val_t, c_val),
+        batch_size=batch_size,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    return train_loader, val_loader, scaler
