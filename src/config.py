@@ -3,14 +3,11 @@ from pathlib import Path
 
 @dataclass
 class Config:
-    # Repro
     seed: int = 42
 
-    # Paths
     data_path: Path = Path("data/allSyntheticData.RData")
     output_path: Path = Path("data/output")
 
-    # Split
     test_size: float = 0.2
 
     # CVAE
