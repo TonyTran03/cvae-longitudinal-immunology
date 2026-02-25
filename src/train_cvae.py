@@ -11,7 +11,6 @@ from src.utils import set_seed
 
 from models.cvae import CVAE
 
-
 def elbo_loss(x, x_hat, mu, logvar, beta: float):
     # Recon: MSE sum over features, mean over batch
     recon = ((x_hat - x) ** 2).sum(dim=1).mean()
@@ -34,7 +33,6 @@ def evaluate(model: CVAE, loader, device, beta: float) -> Dict[str, float]:
         n += 1
     return {"loss": tot / n, "recon": rec / n, "kl": kl / n}
 
-
 def main():
     cfg = Config()
     cfg.ensure_dirs()
@@ -44,7 +42,6 @@ def main():
     print("Device:", device)
 
     X, y = load_rdata_xy(cfg.data_path, x_key=cfg.x_key, y_key=cfg.y_key)
-
     train_loader, val_loader, scaler = make_loaders(
         X, y,
         test_size=cfg.test_size,
@@ -65,7 +62,6 @@ def main():
         model.train()
         tot = rec = kl = 0.0
         n = 0
-
         for x, c in train_loader:
             x, c = x.to(device), c.to(device)
             opt.zero_grad(set_to_none=True)
