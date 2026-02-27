@@ -53,7 +53,7 @@ uv run -m src.train_cvae
 Model checkpoints and logs will be written to:
 
 ```
-data/output/[model]/
+data/output/
 ```
 
 ---
