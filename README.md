@@ -1,3 +1,85 @@
+## How to Use
+
+### Prerequisites
+
+- Python 3.10 or newer
+- uv installed (https://github.com/astral-sh/uv)
+
+uv manages the virtual environment and installs dependencies defined in pyproject.toml.
+
+---
+
+### 1. Install dependencies
+
+From the repository root directory:
+
+```bash
+uv sync
+```
+
+This command creates or updates the virtual environment and installs all required packages.
+
+If you use development dependencies:
+
+```bash
+uv sync --dev
+```
+
+---
+
+### 2. Adjust configuration
+
+Edit the configuration file before training.
+
+Typical parameters to review:
+
+- Data paths
+- Output directory
+- Number of epochs
+- Batch size
+- Learning rate
+- Latent dimension z
+- Hidden layer sizes
+- Conditioning variables
+
+---
+
+### 3. Train the CVAE
+
+```bash
+uv run -m src.train_cvae
+```
+
+Model checkpoints and logs will be written to:
+
+```
+data/output/[model]/
+```
+
+---
+
+### 4. Generate synthetic samples
+
+```bash
+uv run -m src.sample_cvae
+```
+
+Generated synthetic trajectories will be saved to:
+
+```
+data/output/samples/
+```
+
+---
+
+### Common Commands Summary
+
+```bash
+uv sync
+uv run -m src.train_cvae
+uv run -m src.sample_cvae
+```
+___
 # Conditional Variational Autoencoder for Synthetic Longitudinal Immune Data
 
 This repository implements a Conditional Variational Autoencoder (CVAE) for generating synthetic longitudinal immune-response data. The work extends the modeling framework introduced in *"Modelling of longitudinal immune profiles reveals distinct immunogenic signatures following five COVID-19 vaccinations among people living with HIV"*.
