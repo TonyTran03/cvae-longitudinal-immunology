@@ -11,6 +11,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+
+from src.transformation import make_transform
 import pyreadr
 
 
@@ -44,26 +46,35 @@ def make_loaders(
     batch_size: int,
     seed: int,
     num_classes: int = 2,
-) -> Tuple[DataLoader, DataLoader, StandardScaler]:
-    """
-    Splits, standardizes X, and returns DataLoaders yielding (x, c_onehot).
-    """
+    x_transform: str = "none", 
+) -> Tuple[DataLoader, DataLoader, StandardScaler, XTransform]:
+
+    # --- Split first ---
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=test_size, random_state=seed, stratify=y
     )
 
+    # --- Instantiate transform ---
+    transform = make_transform(x_transform)
+
+    # Apply transform in raw space 
+    X_train = transform.forward(X_train)
+    X_val   = transform.forward(X_val)
+
+    # Standardize in transformed space 
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train).astype(np.float32)
-    X_val = scaler.transform(X_val).astype(np.float32)
+    X_val   = scaler.transform(X_val).astype(np.float32)
 
+    # --- Torch tensors ---
     X_train_t = torch.tensor(X_train)
-    X_val_t = torch.tensor(X_val)
+    X_val_t   = torch.tensor(X_val)
 
     y_train_t = torch.tensor(y_train)
-    y_val_t = torch.tensor(y_val)
+    y_val_t   = torch.tensor(y_val)
 
     c_train = F.one_hot(y_train_t, num_classes=num_classes).float()
-    c_val = F.one_hot(y_val_t, num_classes=num_classes).float()
+    c_val   = F.one_hot(y_val_t,   num_classes=num_classes).float()
 
     train_loader = DataLoader(
         TensorDataset(X_train_t, c_train),
@@ -71,6 +82,7 @@ def make_loaders(
         shuffle=True,
         drop_last=False,
     )
+
     val_loader = DataLoader(
         TensorDataset(X_val_t, c_val),
         batch_size=batch_size,
@@ -78,4 +90,4 @@ def make_loaders(
         drop_last=False,
     )
 
-    return train_loader, val_loader, scaler
+    return train_loader, val_loader, scaler, transform
