@@ -12,6 +12,7 @@ from src.utils import set_seed
 from models.cvae import CVAE
 cfg = Config()
 cfg.ensure_dirs()
+
 set_seed(cfg.seed)
 def elbo_loss(x, x_hat, mu, logvar, beta: float):
     # Recon: MSE sum over features, mean over batch
@@ -50,7 +51,7 @@ def evaluate(model: CVAE, loader, device, beta: float, decoder_noise: float = 0.
 def main():
 
     tag = run_tag(cfg)
-    best_path = cfg.output_path / f"cvae_best_{tag}.pt"
+    best_path = cfg.out_dir / f"cvae_best_{tag}.pt"
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device:", device)
@@ -71,7 +72,6 @@ def main():
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
     best_val = float("inf")
-    best_path = cfg.output_path / "cvae_best.pt"
 
     for epoch in range(1, cfg.epochs + 1):
         model.train()

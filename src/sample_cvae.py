@@ -62,7 +62,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device:", device)
 
-    ckpt_path = Path("data/output/cvae_best.pt")
+    ckpt_path = Path("data/output/log1p/cvae_best_xlog1p_z16_h128_b0p5_lr0p001_dn0_seed42.pt")
     model, cfg, mean, scale, transform = load_checkpoint(ckpt_path)
 
     cfg.ensure_dirs()
@@ -72,9 +72,12 @@ def main():
     X_y0 = sample_class(model, n, 0, mean, scale, transform, device)
     X_y1 = sample_class(model, n, 1, mean, scale, transform, device)
 
-    tag = f"{cfg.x_transform}"
-    out0 = cfg.output_path / f"cvae_synth_seed{cfg.seed}_y0_{tag}.npz"
-    out1 = cfg.output_path / f"cvae_synth_seed{cfg.seed}_y1_{tag}.npz"
+    out_dir = cfg.output_path / (cfg.x_transform or "none")
+    sample_dir = out_dir / "samples"
+    sample_dir.mkdir(parents=True, exist_ok=True)
+
+    out0 = sample_dir / f"cvae_synth_seed{cfg.seed}_y0.npz"
+    out1 = sample_dir / f"cvae_synth_seed{cfg.seed}_y1.npz"
 
     np.savez(out0, X=X_y0)
     np.savez(out1, X=X_y1)
