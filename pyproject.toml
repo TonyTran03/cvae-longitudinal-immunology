@@ -13,5 +13,6 @@ dependencies = [
     "pyreadr>=0.5.4",
     "scikit-learn>=1.8.0",
     "scipy>=1.17.0",
+    "statsmodels>=0.14.6",
     "torch>=2.10.0",
 ]
