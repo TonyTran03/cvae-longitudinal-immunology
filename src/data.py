@@ -1,3 +1,4 @@
+# data.py
 from __future__ import annotations
 
 from typing import Tuple
@@ -10,15 +11,18 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-
+from typing import Tuple, List
 
 from src.transformation import make_transform
 import pyreadr
 
-
-def load_rdata_xy(rdata_path: Path, x_key: str = "x", y_key: str = "y") -> Tuple[np.ndarray, np.ndarray]:
+def load_rdata_xy_names(
+    rdata_path: Path,
+    x_key: str = "x",
+    y_key: str = "y"
+) -> Tuple[np.ndarray, np.ndarray, List[str]]:
     """
-    Loads X, y from an .RData file.
+    Loads X, y, and feature names from an .RData file.
 
     Expected:
       - x: (N, D)
@@ -27,17 +31,22 @@ def load_rdata_xy(rdata_path: Path, x_key: str = "x", y_key: str = "y") -> Tuple
     obj = pyreadr.read_r(str(rdata_path))
 
     if x_key not in obj or y_key not in obj:
-        raise KeyError(f"Missing keys. Found: {list(obj.keys())}. Expected '{x_key}' and '{y_key}'.")
+        raise KeyError(
+            f"Missing keys. Found: {list(obj.keys())}. Expected '{x_key}' and '{y_key}'."
+        )
 
-    X = np.asarray(obj[x_key]).astype(np.float32)
-    y = np.asarray(obj[y_key]).reshape(-1).astype(np.int64)
+    x_df = obj[x_key]
+    y_df = obj[y_key]
+
+    X = np.asarray(x_df).astype(np.float32)
+    y = np.asarray(y_df).reshape(-1).astype(np.int64)
+    feature_names = list(x_df.columns)
 
     uniq = np.unique(y)
     if not set(uniq).issubset({0, 1}):
         raise ValueError(f"y must be binary {{0,1}}. Found unique values: {uniq}")
 
-    return X, y
-
+    return X, y, feature_names
 
 def make_loaders(
     X: np.ndarray,
