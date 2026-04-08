@@ -6,7 +6,7 @@ class Config:
     seed: int = 42
     # DO NOT touch theese
     data_path: Path = Path("data/allSyntheticData.RData")
-    output_path: Path = Path("data")
+    output_path: Path = Path("data") # Defaulted to HIV dataset
     test_size: float = 0.2
 
 #______________________________________________________
